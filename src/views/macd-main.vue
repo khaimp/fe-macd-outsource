@@ -120,8 +120,6 @@
 import {
   getData,
   getStatus,
-  getColor,
-  getRsiColor,
   getSrc,
   getMACD,
   getColorMACD,
@@ -132,8 +130,6 @@ import {
 export default {
   data: () => ({
     getStatus,
-    getColor,
-    getRsiColor,
     getSrc,
     getMACD,
     getColorMACD,
@@ -188,10 +184,6 @@ export default {
   }),
   created() {
     this.initialize();
-  },
-  mounted() {
-    // this.connection = new WebSocket("wss://ws.coincap.io/prices?assets=ALL");
-    // this.connection.onmessage = this.onSocketMessage;
   },
   methods: {
     async initialize() {
@@ -250,68 +242,8 @@ export default {
         return Math.floor(value * Math.pow(10, pos)) / Math.pow(10, pos);
       }
     },
-    // async onSocketMessage(event) {
-    // if (this.data_table && event.data) {
-    //   const prices = JSON.parse(event.data);
-    //   this.data_table.forEach((x) => {
-    //     if (x && prices[x.coin_name.toLowerCase()]) {
-    //       x.coin_price = this.getRealValue(prices[x.coin_name.toLowerCase()]);
-    //       x.status = true;
-    //     } else {
-    //       x.status = false;
-    //     }
-    //   });
-    // }
-    // },
-    async updatePage() {
-      // if (this.loading) return;
-      // this.loading = true;
-      // let [step, ranger] = [
-      //   (this.pagination.page - 1) * 10,
-      //   Math.min(this.pagination.page * 10, this.data_table.length),
-      // ];
-      // for (let i = step; i < ranger; i++) {
-      //   let formdata = new FormData();
-      //   formdata.append("symbol", this.data_table[i].coin_symbol);
-      //   let detailRequest = {
-      //     method: "POST",
-      //     body: formdata,
-      //     redirect: "follow",
-      //   };
-      //   if (this.data_table[i].percent_change_30d == undefined) {
-      //     await fetch(
-      //       "https://pro.coingen.net/api/quantifycrypto-coin",
-      //       detailRequest
-      //     )
-      //       .then((response) => response.json())
-      //       .then((result) => {
-      //         if (result) {
-      //           this.data_table[i].coin_price = this.getRealValue(
-      //             result.coin_price
-      //           );
-      //           this.data_table[i].percent_change_30d = this.getRealValue(
-      //             result.percent_change_30d
-      //           );
-      //           this.data_table[i].percent_change_ytd = this.getRealValue(
-      //             result.percent_change_ytd
-      //           );
-      //           this.data_table[i].percent_change_1year = this.getRealValue(
-      //             result.percent_change_1year
-      //           );
-      //           this.data_table[i].rsi_2h = result.rsi_2h;
-      //           this.data_table[i].macd_hist_2h = result.macd_hist_2h;
-      //           this.data_table[i].atr_2h = result.atr_2h;
-      //           this.data_table[i].bollinger_bands_lower_2h =
-      //             result.bollinger_bands_lower_2h;
-      //           this.data_table[i].ma_1h_12 = result.ma_1h_12;
-      //           this.data_table[i].ema_1h_12 = result.ema_1h_12;
-      //         }
-      //       })
-      //       .catch((error) => console.log("error", error));
-      //   }
-      // }
-      // this.loading = false;
-    },
+
+    async updatePage() {},
   },
 };
 </script>
@@ -340,15 +272,4 @@ export default {
 .color-orange {
   color: #ff9800;
 }
-
-/* .custom_table_class thead {
-  white-space: pre-line !important;
-  line-height: 1.5em;
-  max-height: 3em;
-  overflow: hidden;
-  width: 100%;
-  text-overflow: ellipsis;
-  text-align: right;
-  font-size: 20px !important;
-} */
 </style>
