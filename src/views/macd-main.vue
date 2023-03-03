@@ -7,27 +7,73 @@
     :options.sync="pagination"
     @update:page="updatePage()"
     :footer-props="footerProps"
+    :loading="loading"
   >
-    <template v-slot:[`item.icon`]>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        height="24"
-        width="24"
-        role="img"
-        fill="#6e6e6e"
-        aria-hidden="true"
-      >
-        <path
-          d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"
-        ></path>
-      </svg>
+    <template v-slot:[`item.icon`]="{ item }">
+      <v-btn depressed @click="addFavorite(item)">
+        <div class="d-flex">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            role="img"
+            aria-hidden="true"
+            class="v-icon__svg"
+            :class="{ 'color-red': checkFavorite(item) }"
+          >
+            <path
+              d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"
+            ></path>
+          </svg>
+        </div>
+      </v-btn>
     </template>
     <template v-slot:top>
-      <v-toolbar flat>
-        <v-toolbar-title>Macd</v-toolbar-title>
+      <v-toolbar flat class="py-2">
+        <v-toolbar-title>Macd table</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
+        <div style="width: 400px" class="d-flex align-center flex-grow-0">
+          <v-text-field
+            label="Search ..."
+            append-icon="mdi-magnify"
+            hide-details
+            style="width: 50px !important"
+            v-model="form.search"
+          ></v-text-field>
+        </div>
         <v-spacer></v-spacer>
+        <v-btn
+          depressed
+          @click="clickFavorite()"
+          :color="check_favorite ? 'primary' : 'default'"
+        >
+          <div class="d-flex">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              role="img"
+              aria-hidden="true"
+              class="v-icon__svg"
+            >
+              <path
+                d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"
+              ></path>
+            </svg>
+            <div class="mt-auto">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                role="img"
+                aria-hidden="true"
+                class="v-icon__svg"
+                style="font-size: 14px; height: 14px; width: 14px"
+              >
+                <path
+                  d="M12,17C10.89,17 10,16.1 10,15C10,13.89 10.89,13 12,13A2,2 0 0,1 14,15A2,2 0 0,1 12,17M18,20V10H6V20H18M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V10C4,8.89 4.89,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"
+                ></path>
+              </svg>
+            </div>
+          </div>
+        </v-btn>
       </v-toolbar>
     </template>
     <!-- eslint-disable-next-line -->
@@ -44,8 +90,13 @@
     </template>
     <!-- eslint-disable-next-line -->
     <template v-slot:item.coin_price="{ item }">
-      <div :class="getStatus(item.status, item.id)" class="pa-2">
-        $ {{ flooNumber(item.coin_price) }}
+      <div
+        :class="getStatus(item.status, item.id)"
+        class="pa-2 d-flex flex-wrap flex-grow-1"
+      >
+        <span>
+          {{ `$${flooNumber(item.coin_price)}`  }}
+        </span>
       </div>
     </template>
     <!-- eslint-disable-next-line -->
@@ -126,7 +177,9 @@ import {
   getBB,
   getColorBB,
   flooNumber,
+  debounce,
 } from "@/views/function";
+import JsonSearch from "search-array";
 export default {
   data: () => ({
     getStatus,
@@ -145,13 +198,14 @@ export default {
       },
       {
         text: "1-500",
-        align: "start",
+        align: "center",
         sortable: false,
         value: "rank",
+        width: "70px"
       },
       { text: "NAME", width: "250px", value: "coin_name", align: "start" },
-      { text: "PRICE", value: "coin_price", align: "end" },
-      { text: "MACD5M", value: "macd_hist_5min", align: "end" },
+      { text: "PRICE", value: "coin_price", align: "center", width: "auto" },
+      { text: "MACD5M", value: "macd_hist_5min", align: "end" ,width: "auto" },
       { text: "MACD15M", value: "macd_hist_15min", align: "end" },
       { text: "MACD30M", value: "macd_hist_30min", align: "end" },
       { text: "MACD1H", value: "macd_hist_1h", align: "end" },
@@ -174,14 +228,25 @@ export default {
       perpage: 25,
     },
     data_table: [],
-    connection: null,
+    data: [],
     loading: true,
     footerProps: {
       showFirstLastPage: true,
       showCurrentPage: true,
       itemsPerPageOptions: [25, 35, 50, -1],
     },
+    form: {
+      search: null,
+    },
+    check_favorite: false,
   }),
+  watch: {
+    "form.search": {
+      handler: debounce(function (value) {
+        this.handleSearch(value);
+      }, 500),
+    },
+  },
   created() {
     this.initialize();
   },
@@ -189,7 +254,7 @@ export default {
     async initialize() {
       this.loading = true;
       const coin_data = await getData();
-      this.data_table = coin_data.map((x) => ({
+      this.data = coin_data.map((x) => ({
         rank: x.rank,
         coin_symbol: x.coin_symbol,
         coin_name: x.coin_name,
@@ -228,22 +293,49 @@ export default {
           x.bollinger_bands_lower_2h
         ),
       }));
+      this.data_table = this.data;
 
       this.loading = false;
       setTimeout(() => this.initialize(), 5 * 60 * 1000);
     },
-    getRealValue(value) {
-      if (Math.abs(value) > 1) {
-        return Math.round(value * 100) / 100;
-      } else if (value == 0) {
-        return 0;
+    async updatePage() {},
+    addFavorite({ coin_name }) {
+      const list_coin = localStorage.getItem("COIN_FAVORITE");
+      if (!list_coin) {
+        localStorage.setItem("COIN_FAVORITE", JSON.stringify([coin_name]));
       } else {
-        const pos = Math.floor(Math.log10(Math.abs(value))) * -1 + 1;
-        return Math.floor(value * Math.pow(10, pos)) / Math.pow(10, pos);
+        let arr = JSON.parse(list_coin);
+        if (arr.includes(coin_name)) {
+          arr = arr.filter((x) => x != coin_name);
+        } else {
+          arr.unshift(coin_name);
+        }
+        localStorage.setItem("COIN_FAVORITE", JSON.stringify(arr));
+      }
+      this.initialize();
+    },
+    handleSearch(text) {
+      const searcher = new JsonSearch(this.data);
+      this.data_table = searcher.query(text.trim());
+    },
+    checkFavorite({ coin_name }) {
+      const list_coin = localStorage.getItem("COIN_FAVORITE");
+      if (!list_coin) return false;
+      return JSON.parse(list_coin).includes(coin_name);
+    },
+    clickFavorite() {
+      this.check_favorite = !this.check_favorite;
+      if(this.check_favorite){
+        const check_list_coin = localStorage.getItem("COIN_FAVORITE");
+        if (!check_list_coin) return;
+        const list_coin = JSON.parse(check_list_coin);
+        this.data_table = this.data.filter((x) =>
+          list_coin.includes(x.coin_name)
+        );
+      }else{
+        this.data_table = this.data
       }
     },
-
-    async updatePage() {},
   },
 };
 </script>
@@ -270,6 +362,9 @@ export default {
   color: #4caf50;
 }
 .color-orange {
+  color: #ff9800;
+}
+.color-red {
   color: #ff9800;
 }
 </style>

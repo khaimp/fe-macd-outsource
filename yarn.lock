@@ -5090,6 +5090,11 @@ schema-utils@^4.0.0:
     ajv-formats "^2.1.1"
     ajv-keywords "^5.0.0"
 
+search-array@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/search-array/-/search-array-1.6.0.tgz#0937f45f4d906caa83fb0585aadcbc5455f2572e"
+  integrity sha512-7gRZ5m4JcI+lFQjQSjTfmD7HoJ//I41DmbHTDuHIVyCyEZhj43hxnXOcCZoB9L2dbSfUPPyu2khu7HzDy9IJ0w==
+
 select-hose@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/select-hose/-/select-hose-2.0.0.tgz#625d8658f865af43ec962bfc376a37359a4994ca"
