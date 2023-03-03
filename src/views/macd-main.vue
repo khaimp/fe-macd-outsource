@@ -45,72 +45,73 @@
     <!-- eslint-disable-next-line -->
     <template v-slot:item.coin_price="{ item }">
       <div :class="getStatus(item.status, item.id)" class="pa-2">
-        ${{ item.coin_price }}
+        $ {{ flooNumber(item.coin_price) }}
       </div>
     </template>
     <!-- eslint-disable-next-line -->
     <template v-slot:[`item.macd_hist_5min`]="{ item }">
-      <span :class="getColor(item.macd_hist_5min)">
-        {{ item.macd_hist_5min }} %
+      <span :class="getColorMACD(item.macd_hist_5min)">
+        {{ item.macd_hist_5min }}
       </span>
     </template>
     <template v-slot:[`item.macd_hist_15min`]="{ item }">
-      <span :class="getColor(item.macd_hist_15min)">
-        {{ item.macd_hist_15min }} %
+      <span :class="getColorMACD(item.macd_hist_15min)">
+        {{ item.macd_hist_15min }}
       </span>
     </template>
     <template v-slot:[`item.macd_hist_30min`]="{ item }">
-      <span :class="getColor(item.macd_hist_30min)">
-        {{ item.macd_hist_30min }} %
+      <span :class="getColorMACD(item.macd_hist_30min)">
+        {{ item.macd_hist_30min }}
       </span>
     </template>
     <template v-slot:[`item.macd_hist_1h`]="{ item }">
-      <span :class="getColor(item.macd_hist_1h)">
-        {{ item.macd_hist_1h }} %
+      <span :class="getColorMACD(item.macd_hist_1h)">
+        {{ item.macd_hist_1h }}
       </span>
     </template>
     <template v-slot:[`item.macd_hist_2h`]="{ item }">
-      <span :class="getColor(item.macd_hist_2h)">
-        {{ item.macd_hist_2h }} %
+      <span :class="getColorMACD(item.macd_hist_2h)">
+        {{ item.macd_hist_2h }}
       </span>
     </template>
     <template v-slot:[`item.macd_hist_4h`]="{ item }">
-      <span :class="getColor(item.macd_hist_4h)">
-        {{ item.macd_hist_4h }} %
+      <span :class="getColorMACD(item.macd_hist_4h)">
+        {{ item.macd_hist_4h }}
       </span>
     </template>
     <template v-slot:[`item.macd_hist_24h`]="{ item }">
-      <span :class="getColor(item.macd_hist_24h)">
-        {{ item.macd_hist_24h }} %
+      <span :class="getColorMACD(item.macd_hist_24h)">
+        {{ item.macd_hist_24h }}
       </span>
     </template>
-    <template v-slot:[`item.bollinger_bands_lower_5min`]="{ item }">
-      <span :class="getColor(item.bollinger_bands_lower_5min)">
-        {{ item.bollinger_bands_lower_5min }} %
+
+    <template v-slot:[`item.bollinger_bands_5min`]="{ item }">
+      <span :class="getColorBB(item.bollinger_bands_5min)">
+        {{ item.bollinger_bands_5min }}
       </span>
     </template>
-    <template v-slot:[`item.bollinger_bands_lower_15min`]="{ item }">
-      <span :class="getColor(item.bollinger_bands_lower_15min)">
-        {{ item.bollinger_bands_lower_15min }} %
+    <template v-slot:[`item.bollinger_bands_15min`]="{ item }">
+      <span :class="getColorBB(item.bollinger_bands_15min)">
+        {{ item.bollinger_bands_15min }}
       </span>
     </template>
 
     <!-- eslint-disable-next-line -->
-    <template v-slot:item.percent_change_ytd="{ item }">
-      <span :class="getColor(item.percent_change_ytd)">
-        {{ item.percent_change_ytd }} %
+    <template v-slot:item.bollinger_bands_30min="{ item }">
+      <span :class="getColorBB(item.bollinger_bands_30min)">
+        {{ item.bollinger_bands_30min }}
       </span>
     </template>
     <!-- eslint-disable-next-line -->
-    <template v-slot:item.percent_change_1year="{ item }">
-      <span :class="getColor(item.percent_change_1year)">
-        {{ item.percent_change_1year }} %
+    <template v-slot:item.bollinger_bands_1h="{ item }">
+      <span :class="getColorBB(item.bollinger_bands_1h)">
+        {{ item.bollinger_bands_1h }}
       </span>
     </template>
     <!-- eslint-disable-next-line -->
-    <template v-slot:item.rsi_2h="{ item }">
-      <span :class="getRsiColor(item.rsi_2h)">
-        {{ item.rsi_2h }}
+    <template v-slot:item.bollinger_bands_2h="{ item }">
+      <span :class="getColorBB(item.bollinger_bands_2h)">
+        {{ item.bollinger_bands_2h }}
       </span>
     </template>
   </v-data-table>
@@ -118,18 +119,27 @@
 <script>
 import {
   getData,
-  // getDetailCoin,
   getStatus,
   getColor,
   getRsiColor,
   getSrc,
-} from "@/views/api";
+  getMACD,
+  getColorMACD,
+  getBB,
+  getColorBB,
+  flooNumber,
+} from "@/views/function";
 export default {
   data: () => ({
     getStatus,
     getColor,
     getRsiColor,
     getSrc,
+    getMACD,
+    getColorMACD,
+    getBB,
+    getColorBB,
+    flooNumber,
     headers: [
       {
         text: "",
@@ -137,7 +147,13 @@ export default {
         sortable: false,
         value: "icon",
       },
-      { text: "SYMB.", width: "250px", value: "coin_name", align: "start" },
+      {
+        text: "1-500",
+        align: "start",
+        sortable: false,
+        value: "rank",
+      },
+      { text: "NAME", width: "250px", value: "coin_name", align: "start" },
       { text: "PRICE", value: "coin_price", align: "end" },
       { text: "MACD5M", value: "macd_hist_5min", align: "end" },
       { text: "MACD15M", value: "macd_hist_15min", align: "end" },
@@ -146,15 +162,16 @@ export default {
       { text: "MACD2H", value: "macd_hist_2h", align: "end" },
       { text: "MACD4H", value: "macd_hist_4h", align: "end" },
       { text: "MACD24H", value: "macd_hist_24h", align: "end" },
+
       {
         text: "BB5M",
-        value: "bollinger_bands_lower_5min",
+        value: "bollinger_bands_5min",
         align: "end",
       },
-      { text: "BB15M", value: "bollinger_bands_lower_15min", align: "end" },
-      { text: "BB30M", value: "bollinger_bands_lower_15min", align: "end" },
-      { text: "BB1H", value: "bollinger_bands_lower_15min", align: "end" },
-      { text: "BB2H", value: "bollinger_bands_lower_15min", align: "end" },
+      { text: "BB15M", value: "bollinger_bands_15min", align: "end" },
+      { text: "BB30M", value: "bollinger_bands_30min", align: "end" },
+      { text: "BB1H", value: "bollinger_bands_1h", align: "end" },
+      { text: "BB2H", value: "bollinger_bands_2h", align: "end" },
     ],
     pagination: {
       page: 1,
@@ -165,25 +182,16 @@ export default {
     loading: true,
     footerProps: {
       showFirstLastPage: true,
-      // disableItemsPerPage: true,
       showCurrentPage: true,
       itemsPerPageOptions: [25, 35, 50, -1],
     },
   }),
-  watch: {
-    dialog(val) {
-      val || this.close();
-    },
-    dialogDelete(val) {
-      val || this.closeDelete();
-    },
-  },
   created() {
     this.initialize();
   },
   mounted() {
-    this.connection = new WebSocket("wss://ws.coincap.io/prices?assets=ALL");
-    this.connection.onmessage = this.onSocketMessage;
+    // this.connection = new WebSocket("wss://ws.coincap.io/prices?assets=ALL");
+    // this.connection.onmessage = this.onSocketMessage;
   },
   methods: {
     async initialize() {
@@ -193,23 +201,44 @@ export default {
         rank: x.rank,
         coin_symbol: x.coin_symbol,
         coin_name: x.coin_name,
-        coin_price: this.getRealValue(x.coin_price),
-        macd_hist_5min: this.getRealValue(x.macd_hist_5min),
-        macd_hist_15min: this.getRealValue(x.macd_hist_15min),
-        macd_hist_30min: this.getRealValue(x.macd_hist_30min),
-        macd_hist_1h: this.getRealValue(x.macd_hist_1h),
-        macd_hist_2h: this.getRealValue(x.macd_hist_2h),
-        macd_hist_4h: this.getRealValue(x.macd_hist_4h),
-        macd_hist_24h: this.getRealValue(x.macd_hist_24h),
-        bollinger_bands_lower_5min: this.getRealValue(
+        coin_price: x.coin_price,
+        macd_hist_5min: this.getMACD(x.macd_hist_5min),
+        macd_hist_15min: this.getMACD(x.macd_hist_15min),
+        macd_hist_30min: this.getMACD(x.macd_hist_30min),
+        macd_hist_1h: this.getMACD(x.macd_hist_1h),
+        macd_hist_2h: this.getMACD(x.macd_hist_2h),
+        macd_hist_4h: this.getMACD(x.macd_hist_4h),
+        macd_hist_24h: this.getMACD(x.macd_hist_24h),
+        // BB
+        bollinger_bands_5min: getBB(
+          x.coin_price,
+          x.bollinger_bands_upper_5min,
           x.bollinger_bands_lower_5min
         ),
-        bollinger_bands_lower_15min: this.getRealValue(
+        bollinger_bands_15min: getBB(
+          x.coin_price,
+          x.bollinger_bands_upper_15min,
           x.bollinger_bands_lower_15min
+        ),
+        bollinger_bands_30min: getBB(
+          x.coin_price,
+          x.bollinger_bands_upper_30min,
+          x.bollinger_bands_lower_30min
+        ),
+        bollinger_bands_1h: getBB(
+          x.coin_price,
+          x.bollinger_bands_upper_1h,
+          x.bollinger_bands_lower_1h
+        ),
+        bollinger_bands_2h: getBB(
+          x.coin_price,
+          x.bollinger_bands_upper_2h,
+          x.bollinger_bands_lower_2h
         ),
       }));
 
       this.loading = false;
+      setTimeout(() => this.initialize(), 5 * 60 * 1000);
     },
     getRealValue(value) {
       if (Math.abs(value) > 1) {
@@ -221,104 +250,67 @@ export default {
         return Math.floor(value * Math.pow(10, pos)) / Math.pow(10, pos);
       }
     },
-    async onSocketMessage(event) {
-      if (this.data_table && event.data) {
-        const prices = JSON.parse(event.data);
-        this.data_table.forEach((x) => {
-          if (x && prices[x.coin_name.toLowerCase()]) {
-            x.coin_price = this.getRealValue(prices[x.coin_name.toLowerCase()]);
-            x.status = true;
-          } else {
-            x.status = false;
-          }
-        });
-      }
-    },
+    // async onSocketMessage(event) {
+    // if (this.data_table && event.data) {
+    //   const prices = JSON.parse(event.data);
+    //   this.data_table.forEach((x) => {
+    //     if (x && prices[x.coin_name.toLowerCase()]) {
+    //       x.coin_price = this.getRealValue(prices[x.coin_name.toLowerCase()]);
+    //       x.status = true;
+    //     } else {
+    //       x.status = false;
+    //     }
+    //   });
+    // }
+    // },
     async updatePage() {
-      if (this.loading) return;
-      this.loading = true;
-      let [step, ranger] = [
-        (this.pagination.page - 1) * 10,
-        Math.min(this.pagination.page * 10, this.data_table.length),
-      ];
-      for (let i = step; i < ranger; i++) {
-        let formdata = new FormData();
-        formdata.append("symbol", this.data_table[i].coin_symbol);
-        let detailRequest = {
-          method: "POST",
-          body: formdata,
-          redirect: "follow",
-        };
-        if (this.data_table[i].percent_change_30d == undefined) {
-          await fetch(
-            "https://pro.coingen.net/api/quantifycrypto-coin",
-            detailRequest
-          )
-            .then((response) => response.json())
-            .then((result) => {
-              if (result) {
-                this.data_table[i].coin_price = this.getRealValue(
-                  result.coin_price
-                );
-                this.data_table[i].percent_change_30d = this.getRealValue(
-                  result.percent_change_30d
-                );
-                this.data_table[i].percent_change_ytd = this.getRealValue(
-                  result.percent_change_ytd
-                );
-                this.data_table[i].percent_change_1year = this.getRealValue(
-                  result.percent_change_1year
-                );
-                this.data_table[i].rsi_2h = result.rsi_2h;
-                this.data_table[i].macd_hist_2h = result.macd_hist_2h;
-                this.data_table[i].atr_2h = result.atr_2h;
-                this.data_table[i].bollinger_bands_lower_2h =
-                  result.bollinger_bands_lower_2h;
-                this.data_table[i].ma_1h_12 = result.ma_1h_12;
-                this.data_table[i].ema_1h_12 = result.ema_1h_12;
-              }
-            })
-            .catch((error) => console.log("error", error));
-        }
-
-        // if (this.data_table[i].percent_change_30d == undefined) {
-        //   let result = await getDetailCoin(this.data_table[i].coin_symbol);
-        //   console.log("🚀 ~ file: macd-main.vue:251 ~ updatePage ~ result:", result)
-        //   if (result) {
-        //     this.data_table[i].coin_name = result.coin_name;
-        //     this.data_table[i].coin_price = result.coin_price;
-        //     this.data_table[i].percent_change_30d = this.getRealValue(
-        //       result.percent_change_30d
-        //     );
-
-        //     this.data_table[i].macd_hist_5min = this.getRealValue(
-        //       result.macd_hist_5min
-        //     );
-        //     this.data_table[i].macd_hist_30min = this.getRealValue(
-        //       result.macd_hist_30min
-        //     );
-        //     this.data_table[i].macd_hist_1h = this.getRealValue(
-        //       result.macd_hist_1h
-        //     );
-        //     this.data_table[i].macd_hist_2h = this.getRealValue(
-        //       result.macd_hist_2h
-        //     );
-        //     this.data_table[i].macd_hist_4h = this.getRealValue(
-        //       result.macd_hist_4h
-        //     );
-        //     this.data_table[i].macd_hist_24h = this.getRealValue(
-        //       result.macd_hist_24h
-        //     );
-        //     this.data_table[i].bollinger_bands_lower_5min = this.getRealValue(
-        //       result.bollinger_bands_lower_5min
-        //     );
-        //     this.data_table[i].bollinger_bands_lower_15min = this.getRealValue(
-        //       result.bollinger_bands_lower_15min
-        //     );
-        //   }
-        // }
-      }
-      this.loading = false;
+      // if (this.loading) return;
+      // this.loading = true;
+      // let [step, ranger] = [
+      //   (this.pagination.page - 1) * 10,
+      //   Math.min(this.pagination.page * 10, this.data_table.length),
+      // ];
+      // for (let i = step; i < ranger; i++) {
+      //   let formdata = new FormData();
+      //   formdata.append("symbol", this.data_table[i].coin_symbol);
+      //   let detailRequest = {
+      //     method: "POST",
+      //     body: formdata,
+      //     redirect: "follow",
+      //   };
+      //   if (this.data_table[i].percent_change_30d == undefined) {
+      //     await fetch(
+      //       "https://pro.coingen.net/api/quantifycrypto-coin",
+      //       detailRequest
+      //     )
+      //       .then((response) => response.json())
+      //       .then((result) => {
+      //         if (result) {
+      //           this.data_table[i].coin_price = this.getRealValue(
+      //             result.coin_price
+      //           );
+      //           this.data_table[i].percent_change_30d = this.getRealValue(
+      //             result.percent_change_30d
+      //           );
+      //           this.data_table[i].percent_change_ytd = this.getRealValue(
+      //             result.percent_change_ytd
+      //           );
+      //           this.data_table[i].percent_change_1year = this.getRealValue(
+      //             result.percent_change_1year
+      //           );
+      //           this.data_table[i].rsi_2h = result.rsi_2h;
+      //           this.data_table[i].macd_hist_2h = result.macd_hist_2h;
+      //           this.data_table[i].atr_2h = result.atr_2h;
+      //           this.data_table[i].bollinger_bands_lower_2h =
+      //             result.bollinger_bands_lower_2h;
+      //           this.data_table[i].ma_1h_12 = result.ma_1h_12;
+      //           this.data_table[i].ema_1h_12 = result.ema_1h_12;
+      //         }
+      //       })
+      //       .catch((error) => console.log("error", error));
+      //   }
+      // }
+      // this.loading = false;
     },
   },
 };
