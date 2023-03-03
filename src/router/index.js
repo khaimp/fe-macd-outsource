@@ -5,7 +5,7 @@ Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/macd',
+    path: '/',
     name: 'macd',
     component: () => import("@/views/macd-main.vue")
   }
